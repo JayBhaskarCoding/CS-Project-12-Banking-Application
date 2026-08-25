@@ -1,42 +1,33 @@
 import customtkinter as ctk
-from PIL import Image
 import tkinter.messagebox as messagebox
-import tkinter as tk
 import mysql.connector as sql
 import random
 import string
 import datetime
-import hashlib
-import os
-import ctypes
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__)) #Code to integrate running files on same location as main.py alongwith database.py
+ctk.set_appearance_mode("Light")  # Can be "Light", "Dark", or "System"
+ctk.set_default_color_theme("blue")  # Themes: "blue", "dark-blue", "green"
 
-ctk.set_appearance_mode("Light") #GUI Code
-ctk.set_default_color_theme("blue") #GUI Code
-
-db = sql.connect(host="localhost", user="root", database="Bank_Database")
+db = sql.connect(host="localhost", user="root", password="1234", database="Bank_Mng")
 cursor = db.cursor(buffered=True)
 
-def hash_password(password_string):
-    return hashlib.sha256(password_string.encode('utf-8')).hexdigest()
-#===========================
-#         GUI CODE
-#===========================
+# ==========================================
+# GLOBAL UI THEME SETTINGS
+# ==========================================
 COLORS = {
     "bg": "#AAF2F2",             # Brand Theme: Light airy cyan for the main app background
     "card_bg": "#FFFFFF",        # Pure White for floating cards to pop against the cyan
     
-    "primary": "#00838F",        # Deep Teal for main buttons/headers
+    "primary": "#00838F",        # Deep Teal for main buttons/headers (beautiful contrast to the cyan)
     "primary_hover": "#006064",  # Darker Teal for smooth hover effects
     
-    "dark_btn": "#1E293B",       # Midnight Slate for Employee actions
-    "dark_hover": "#475569",     # Lighter Slate
+    "dark_btn": "#1E293B",       # Midnight Slate for Employee actions (adds professional gravity)
+    "dark_hover": "#0F172A",     # Deeper Midnight
     
-    "success": "#2A9D8F",        # Soft Emerald Green for Deposits/Success
-    "danger": "#EF476F",         # Vibrant Coral Pink for Withdraw/Logout
+    "success": "#2A9D8F",        # Soft Emerald Green for Deposits/Success (calmer than harsh neon green)
+    "danger": "#EF476F",         # Vibrant Coral Pink for Withdraw/Logout (modern alternative to pure red)
     
-    "text_main": "#0F172A",      # Very dark slate blue for text
+    "text_main": "#0F172A",      # Very dark slate blue for text (softer on the eyes than pure black)
     "text_muted": "#64748B",     # Cool grey for descriptions and placeholders
     "border": "#80D4D4",         # Slightly darker cyan for subtle dividers and borders
     "secondary": "#F1F5F9",      # Very light cool-grey for back/cancel buttons
@@ -50,17 +41,15 @@ FONTS = {
     "body": ("Helvetica", 12),
     "body_bold": ("Helvetica", 12, "bold"),
     "small": ("Helvetica", 10),
-    "mono": ("Courier", 10)
+    "mono": ("Courier", 10)  # For the statement screen
 }
-#===========================
-#
-#===========================
-def random_account_gen(): # Generating Random 16-Digit Account Number
+
+def random_account_gen():
     first_digit = str(random.randint(1,9))
     remainng_digits = "".join(str(random.randint(0,9)) for i in range(15))
     return first_digit + remainng_digits
 
-def gen_unique_acc_no(cursor): # Verifying Uniqueness Of Random 16-Digit Account Number
+def gen_unique_acc_no(cursor):
     while True:
         potential_number = random_account_gen()
 
@@ -68,11 +57,11 @@ def gen_unique_acc_no(cursor): # Verifying Uniqueness Of Random 16-Digit Account
         if cursor.fetchone() is None:
             return potential_number
 
-def random_emp_gen(): # Generating Random 6-Digit Employee ID
+def random_emp_gen():
     emp_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     return emp_id
 
-def gen_unique_emp_id(cursor): # Verifying Uniqueness Of Random 6-Digit Employee ID
+def gen_unique_emp_id(cursor):
     while True:
             potential_id = random_emp_gen()
     
@@ -80,7 +69,7 @@ def gen_unique_emp_id(cursor): # Verifying Uniqueness Of Random 6-Digit Employee
             if cursor.fetchone() is None:
                 return potential_id
 
-def gen_unique_trnsc_id(): # Generating Random 25-Digit Transaction Number
+def gen_unique_trnsc_id():
     time = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
 
     prefix = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
@@ -88,29 +77,19 @@ def gen_unique_trnsc_id(): # Generating Random 25-Digit Transaction Number
 
     return f"{prefix}{time}{suffix}"
 
-def clear_window(): #Clears all elements from the current window
+def clear_window():
     for widget in main_window.winfo_children():
         widget.destroy()
 
-def draw_homepage(): # Drawing The Starting Page
+def draw_homepage():
     clear_window()
     main_window.title("Bank Management")
 
-    Header_Container = ctk.CTkFrame(main_window, fg_color="transparent")
-    Header_Container.pack(pady=(40, 30))
-
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "bank_logo.png")
-        logo_data = Image.open(icon_path)
-        logo_img = ctk.CTkImage(light_image=logo_data, dark_image=logo_data, size=(40, 40))
-        Header_Logo = ctk.CTkLabel(Header_Container, image=logo_img, text="  Welcome to Bank Management", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"], compound="left")
-        Header_Logo.pack()
-    except FileNotFoundError:
-        Header_Fallback = ctk.CTkLabel(Header_Container, text="Welcome to Bank Management", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"])
-        Header_Fallback.pack()
+    Header = ctk.CTkLabel(main_window, text="Welcome to Bank Management", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"])
+    Header.pack(pady=(60, 40))
 
     Card_Frame = ctk.CTkFrame(main_window, fg_color="white", corner_radius=15)
-    Card_Frame.pack(pady=(10, 50), padx=60, fill="both", expand=True)
+    Card_Frame.pack(pady=(10, 60), padx=60, fill="both", expand=True)
 
     Customer_Frame = ctk.CTkFrame(Card_Frame, fg_color="transparent")
     Customer_Frame.pack(side="left", expand=True, fill="both", padx=20)
@@ -124,14 +103,7 @@ def draw_homepage(): # Drawing The Starting Page
     Cus_Desc = ctk.CTkLabel(Cus_Inner, text="Access your personal accounts,\ntransfer funds, and view balances.", font=("Helvetica", 16), text_color=COLORS["text_muted"], justify="center")
     Cus_Desc.pack(pady=(0, 30))
 
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "customer_icon.png")
-        cus_icon_data = Image.open(icon_path)
-        cus_icon = ctk.CTkImage(light_image=cus_icon_data, dark_image=cus_icon_data, size=(20, 20))
-        Cus_Btn = ctk.CTkButton(Cus_Inner, image=cus_icon, compound="left", text=" Customer Portal", font=("Helvetica", 16, "bold"), corner_radius=8, height=45, width=220, fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], command=draw_login_screen)
-    except FileNotFoundError:
-        Cus_Btn = ctk.CTkButton(Cus_Inner, text="Customer Portal", font=("Helvetica", 16, "bold"), corner_radius=8, height=45, width=200, fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], command=draw_login_screen)
-    
+    Cus_Btn = ctk.CTkButton(Cus_Inner, text="Customer Portal", font=("Helvetica", 16, "bold"), corner_radius=8, height=45, width=200, fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], command=draw_login_screen)
     Cus_Btn.pack()
 
     Divider = ctk.CTkFrame(Card_Frame, width=2, fg_color=COLORS["secondary_hover"])
@@ -149,32 +121,15 @@ def draw_homepage(): # Drawing The Starting Page
     Emp_Desc = ctk.CTkLabel(Emp_Inner, text="Manage user accounts, verify\ntransactions, and assist customers.", font=("Helvetica", 16), text_color=COLORS["text_muted"], justify="center")
     Emp_Desc.pack(pady=(0, 30))
 
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "employee_icon.png")
-        emp_icon_data = Image.open(icon_path)
-        emp_icon = ctk.CTkImage(light_image=emp_icon_data, dark_image=emp_icon_data, size=(20, 20))
-        Emp_Btn = ctk.CTkButton(Emp_Inner, image=emp_icon, compound="left", text=" Employee Portal", font=("Helvetica", 16, "bold"), corner_radius=8, height=45, width=220, fg_color=COLORS["dark_btn"], hover_color=COLORS["dark_hover"], command=draw_emp_login_screen)
-    except FileNotFoundError:
-        Emp_Btn = ctk.CTkButton(Emp_Inner, text="Employee Portal", font=("Helvetica", 16, "bold"), corner_radius=8, height=45, width=200, fg_color=COLORS["dark_btn"], hover_color=COLORS["dark_hover"], command=draw_emp_login_screen)
-    
+    Emp_Btn = ctk.CTkButton(Emp_Inner, text="Employee Portal", font=("Helvetica", 16, "bold"), corner_radius=8, height=45, width=200, fg_color=COLORS["dark_btn"], hover_color=COLORS["dark_hover"], command=draw_emp_login_screen)
     Emp_Btn.pack()
 
 def draw_login_screen():
     clear_window()
     main_window.title("Bank Management - Login")
 
-    Header_Container = ctk.CTkFrame(main_window, fg_color="transparent")
-    Header_Container.pack(pady=(40, 30))
-
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "customer_login_icon.png")
-        logo_data = Image.open(icon_path)
-        logo_img = ctk.CTkImage(light_image=logo_data, dark_image=logo_data, size=(40, 40))
-        Header_Logo = ctk.CTkLabel(Header_Container, image=logo_img, text="  Customer Login", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"], compound="left")
-        Header_Logo.pack()
-    except FileNotFoundError:
-        Header_Fallback = ctk.CTkLabel(Header_Container, text="Customer Login", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"])
-        Header_Fallback.pack()
+    Header = ctk.CTkLabel(main_window, text="Customer Login", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"])
+    Header.pack(pady=(50, 30))
 
     Card_Frame = ctk.CTkFrame(main_window, fg_color="white", corner_radius=15)
     Card_Frame.pack(ipadx=40, ipady=30)
@@ -192,15 +147,6 @@ def draw_login_screen():
     Password_Input = ctk.CTkEntry(Form_Frame, placeholder_text="Enter Your Password", show="*", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     Password_Input.pack(pady=(0, 30))
 
-    local_icons = {}
-    try:
-        l_icon_path = os.path.join(BASE_DIR, "assets", "login_icon.png")
-        b_icon_path = os.path.join(BASE_DIR, "assets", "back_icon.png")
-        local_icons['login'] = ctk.CTkImage(Image.open(l_icon_path), size=(24, 24))
-        local_icons['back'] = ctk.CTkImage(Image.open(b_icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def attempt_login():
         username = Username_Input.get()
         password = Password_Input.get()
@@ -212,7 +158,7 @@ def draw_login_screen():
             cursor.execute("SELECT Psswd, Acc_No FROM Account_Credentials WHERE Usrnm = %s", (username,))
             result = cursor.fetchone()
 
-            if result is not None and result[0] == hash_password(password):
+            if result is not None and result[0] == password:
                 ac_no = result[1]
                 
                 cursor.execute("SELECT Acc_Name, Acc_Balance FROM Accounts WHERE Acc_No = %s", (ac_no,))
@@ -226,36 +172,24 @@ def draw_login_screen():
                     return
                 
                 draw_dashboard(acc_name, acc_balance, ac_no)
+                print(f"Logged In Succesfully {username}")
             else:
                 messagebox.showerror("Login Failed", "Invalid Username Or Password !! \n\n Please Check Your Username And Password")
         except sql.Error as err:
-            messagebox.showerror("Error", f"{err}")
+            print(f"Databse Error: {err}")
 
-    Login_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('login'), compound="left", text=" Login", font=("Helvetica", 18, "bold"), fg_color=COLORS["success"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=attempt_login)
+    Login_Btn = ctk.CTkButton(Form_Frame, text="Login", font=("Helvetica", 18, "bold"), fg_color=COLORS["success"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=attempt_login)
     Login_Btn.pack(pady=(0, 15))
 
-    Back_Homepage = ctk.CTkButton(Form_Frame, image=local_icons.get('back'), compound="left", text=" Back To Homepage", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=draw_homepage)
+    Back_Homepage = ctk.CTkButton(Form_Frame, text="Back To Homepage", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=draw_homepage)
     Back_Homepage.pack()
 
 def draw_create_screen(emp_id, emp_name):
     clear_window()
     main_window.title("Bank Management - Create Account")
 
-    Header_Container = ctk.CTkFrame(main_window, fg_color="transparent")
-    Header_Container.pack(pady=(30, 5))
-
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "customer_login_icon.png")
-        logo_data = Image.open(icon_path)
-        logo_img = ctk.CTkImage(light_image=logo_data, dark_image=logo_data, size=(40, 40))
-        Header_Logo = ctk.CTkLabel(Header_Container, image=logo_img, text="  Create Customer Account", font=("Helvetica", 32, "bold"), text_color=COLORS["primary"], compound="left")
-        Header_Logo.pack()
-    except FileNotFoundError:
-        Header_Fallback = ctk.CTkLabel(Header_Container, text="Create Customer Account", font=("Helvetica", 32, "bold"), text_color=COLORS["primary"])
-        Header_Fallback.pack()
-
-    Sub_Header = ctk.CTkLabel(main_window, text="Register a new customer and generate their secure credentials.", font=("Helvetica", 16), text_color=COLORS["text_muted"])
-    Sub_Header.pack(pady=(0, 20))
+    Header = ctk.CTkLabel(main_window, text="Create Customer Account", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"])
+    Header.pack(pady=(25, 15))
 
     Card_Frame = ctk.CTkFrame(main_window, fg_color="white", corner_radius=15)
     Card_Frame.pack(ipadx=50, ipady=25)
@@ -263,23 +197,9 @@ def draw_create_screen(emp_id, emp_name):
     Form_Frame = ctk.CTkFrame(Card_Frame, fg_color="transparent")
     Form_Frame.pack(pady=10)
 
-    def validate_name(proposed_text):
-        if proposed_text == "" or proposed_text == "Customer Full Name":
-            return True
-
-        if len(proposed_text) > 50:
-            return False
-
-        for char in proposed_text:
-            if not (char.isalpha() or char.isspace()):
-                return False
-        return True
-
-    vcmd_name = (main_window.register(validate_name), '%P')
-    
     Acc_Name_Label = ctk.CTkLabel(Form_Frame, text="Enter Your Full Name", font=("Helvetica", 16, "bold"), text_color=COLORS["text_main"])
     Acc_Name_Label.pack(anchor="w", pady=(0, 5))
-    Acc_Name_Input = ctk.CTkEntry(Form_Frame, placeholder_text="Customer Full Name", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"], validate="key", validatecommand=vcmd_name)
+    Acc_Name_Input = ctk.CTkEntry(Form_Frame, placeholder_text="Customer Full Name", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     Acc_Name_Input.pack(pady=(0, 15))
 
     Username_Label = ctk.CTkLabel(Form_Frame, text="Choose A Username", font=("Helvetica", 16, "bold"), text_color=COLORS["text_main"])
@@ -292,13 +212,6 @@ def draw_create_screen(emp_id, emp_name):
     Password_Input = ctk.CTkEntry(Form_Frame, placeholder_text="Create Password", show="*", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     Password_Input.pack(pady=(0, 25))
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "create_icon.png")
-        local_icons['create'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def attempt_create():
         username = Username_Input.get()
         password = Password_Input.get()
@@ -306,16 +219,6 @@ def draw_create_screen(emp_id, emp_name):
 
         if not username.strip() or not password.strip() or not acc_name.strip():
             messagebox.showerror("Invalid Input", "Please Fill All Required Fields Properly !")
-            return
-
-        if len(acc_name) > 50:
-            messagebox.showwarning("Limit Exceeded", "Full Name cannot exceed 50 characters.")
-            return
-        if len(username) > 10:
-            messagebox.showwarning("Limit Exceeded", "Username cannot exceed 10 characters.")
-            return
-        if len(password) < 8:
-            messagebox.showwarning("Weak Password", "For security, your password must be at least 8 characters long.")
             return
             
         try:
@@ -327,20 +230,20 @@ def draw_create_screen(emp_id, emp_name):
                 return
                 
             acc_no = gen_unique_acc_no(cursor)
-            secure_hash = hash_password(password)
             cursor.execute("INSERT INTO Accounts (Acc_No, Acc_Name, Acc_Balance, Acc_opn_date) VALUES (%s, %s, %s, NOW())", (acc_no, acc_name, 0.00,))
-            cursor.execute("INSERT INTO Account_Credentials (Acc_No, Usrnm, Psswd) VALUES (%s, %s, %s)", (acc_no, username, secure_hash))
+            cursor.execute("INSERT INTO Account_Credentials (Acc_No, Usrnm, Psswd) VALUES (%s, %s, %s)", (acc_no, username, password))
             db.commit()
+            print(f"Account Created Successfully With Account Number: {acc_no}")
             messagebox.showinfo("Account Created", f"Your Account Has Been Created Succesfully \n\n Your Account Number Is: {acc_no}")
             draw_employee_dashboard(emp_id, emp_name)
                 
         except sql.Error as err:
-            messagebox.showerror("Error", f"{err}")
+            print(f"Database Error: {err}")
 
-    Create_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('create'), compound="left", text=" Create Account", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=attempt_create)
+    Create_Btn = ctk.CTkButton(Form_Frame, text="Create Account", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=attempt_create)
     Create_Btn.pack(pady=(0, 15))
 
-    Back_Btn = ctk.CTkButton(Form_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
+    Back_Btn = ctk.CTkButton(Form_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
     Back_Btn.pack()
 
 def draw_withdraw_screen(acc_no):
@@ -371,13 +274,6 @@ def draw_withdraw_screen(acc_no):
     
     Withdraw_Entry = ctk.CTkEntry(Form_Frame, placeholder_text="Amount (₹)", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     Withdraw_Entry.pack(pady=(0, 30))
-
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "withdraw_icon.png")
-        local_icons['withdraw'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
 
     def go_back():
         cursor.execute("SELECT Acc_Name, Acc_Balance FROM Accounts WHERE Acc_No = %s", (acc_no,))
@@ -426,10 +322,10 @@ def draw_withdraw_screen(acc_no):
             db.rollback()
             messagebox.showerror("Database Error", f"Withdrawal failed: {err}")
 
-    Withdraw_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('withdraw'), compound="left", text=" Complete Withdrawal", font=("Helvetica", 18, "bold"), fg_color=COLORS["danger"], hover_color="#C82333", height=45, width=320, corner_radius=8, command=attempt_withdraw)
+    Withdraw_Btn = ctk.CTkButton(Form_Frame, text="Complete Withdrawal", font=("Helvetica", 18, "bold"), fg_color=COLORS["danger"], hover_color="#C82333", height=45, width=320, corner_radius=8, command=attempt_withdraw)
     Withdraw_Btn.pack(pady=(0, 15))
 
-    Back_Btn = ctk.CTkButton(Form_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=go_back)
+    Back_Btn = ctk.CTkButton(Form_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=go_back)
     Back_Btn.pack()
 
 def draw_deposit_screen(acc_no):
@@ -460,13 +356,6 @@ def draw_deposit_screen(acc_no):
     
     Deposit_Entry = ctk.CTkEntry(Form_Frame, placeholder_text="Deposit Amount (₹)", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     Deposit_Entry.pack(pady=(0, 30))
-
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "deposit_icon.png")
-        local_icons['deposit'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
 
     def go_back():
         cursor.execute("SELECT Acc_Name, Acc_Balance FROM Accounts WHERE Acc_No = %s", (acc_no,))
@@ -511,10 +400,10 @@ def draw_deposit_screen(acc_no):
             db.rollback()
             messagebox.showerror("Database Error", f"Deposit failed: {err}")
 
-    Deposit_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('deposit'), compound="left", text=" Complete Deposit", font=("Helvetica", 18, "bold"), fg_color=COLORS["success"], hover_color="#218838", height=45, width=320, corner_radius=8, command=attempt_deposit)
+    Deposit_Btn = ctk.CTkButton(Form_Frame, text="Complete Deposit", font=("Helvetica", 18, "bold"), fg_color=COLORS["success"], hover_color="#218838", height=45, width=320, corner_radius=8, command=attempt_deposit)
     Deposit_Btn.pack(pady=(0, 15))
 
-    Back_Btn = ctk.CTkButton(Form_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=go_back)
+    Back_Btn = ctk.CTkButton(Form_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=go_back)
     Back_Btn.pack()
 
 def draw_dashboard(acc_name, acc_balance, acc_no):
@@ -535,14 +424,7 @@ def draw_dashboard(acc_name, acc_balance, acc_no):
     Sub_Header = ctk.CTkLabel(Header_Text_Frame, text="Here Is Your Financial Summary Dashboard.", font=("Helvetica", 16), text_color=COLORS["text_muted"])
     Sub_Header.pack(anchor="w", pady=(0, 5))
 
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "logout_icon.png")
-        logout_img_data = Image.open(icon_path)
-        logout_icon = ctk.CTkImage(light_image=logout_img_data, dark_image=logout_img_data, size=(18, 18))
-        Logout_Btn = ctk.CTkButton(Header_Frame, image=logout_icon, compound="left", text=" Log Out", font=("Helvetica", 14, "bold"), fg_color=COLORS["secondary"], text_color=COLORS["danger"], hover_color=COLORS["secondary_hover"], height=35, width=110, corner_radius=8, command=draw_homepage)
-    except FileNotFoundError:
-        Logout_Btn = ctk.CTkButton(Header_Frame, text="Log Out", font=("Helvetica", 14, "bold"), fg_color=COLORS["secondary"], text_color=COLORS["danger"], hover_color=COLORS["secondary_hover"], height=35, width=100, corner_radius=8, command=draw_homepage)
-    
+    Logout_Btn = ctk.CTkButton(Header_Frame, text="Log Out", font=("Helvetica", 14, "bold"), fg_color=COLORS["secondary"], text_color=COLORS["danger"], hover_color=COLORS["secondary_hover"], height=35, width=100, corner_radius=8, command=draw_homepage)
     Logout_Btn.pack(side="right", anchor="n")
 
     Card_Frame = ctk.CTkFrame(main_window, fg_color=COLORS["primary"], corner_radius=15)
@@ -573,47 +455,24 @@ def draw_dashboard(acc_name, acc_balance, acc_no):
     Action_Frame.grid_columnconfigure(0, weight=1)
     Action_Frame.grid_columnconfigure(1, weight=1)
 
-    try:
-        d_icon_path = os.path.join(BASE_DIR, "assets", "deposit_icon.png")
-        w_icon_path = os.path.join(BASE_DIR, "assets", "create_icon.png")
-        s_icon_path = os.path.join(BASE_DIR, "assets", "create_icon.png")
-        sc_icon_path = os.path.join(BASE_DIR, "assets", "create_icon.png")
-        dep_icon = ctk.CTkImage(Image.open(d_icon_path), size=(20, 20))
-        wit_icon = ctk.CTkImage(Image.open(w_icon_path), size=(30, 30))
-        stm_icon = ctk.CTkImage(Image.open(s_icon_path), size=(20, 20))
-        sch_icon = ctk.CTkImage(Image.open(sc_icon_path), size=(20, 20))
-    except FileNotFoundError as err:
-        dep_icon = wit_icon = stm_icon = sch_icon = None
-        messagebox.showerror("Error", f"{err}")
-
-    Deposit_Btn = ctk.CTkButton(Action_Frame, image=dep_icon, compound="left", text=" Deposit Funds", font=("Helvetica", 16, "bold"), fg_color=COLORS["success"], hover_color="#218838", height=50, corner_radius=10, command=lambda: draw_deposit_screen(acc_no))
+    Deposit_Btn = ctk.CTkButton(Action_Frame, text="Deposit Funds", font=("Helvetica", 16, "bold"), fg_color=COLORS["success"], hover_color="#218838", height=50, corner_radius=10, command=lambda: draw_deposit_screen(acc_no))
     Deposit_Btn.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
 
-    Withdraw_Btn = ctk.CTkButton(Action_Frame, image=wit_icon, compound="left", text=" Withdraw Funds", font=("Helvetica", 16, "bold"), fg_color=COLORS["danger"], hover_color="#C82333", height=50, corner_radius=10, command=lambda: draw_withdraw_screen(acc_no))
+    Withdraw_Btn = ctk.CTkButton(Action_Frame, text="Withdraw Funds", font=("Helvetica", 16, "bold"), fg_color=COLORS["danger"], hover_color="#C82333", height=50, corner_radius=10, command=lambda: draw_withdraw_screen(acc_no))
     Withdraw_Btn.grid(row=0, column=1, padx=10, pady=10, sticky="ew")
 
-    Mini_Stmt_Btn = ctk.CTkButton(Action_Frame, image=stm_icon, compound="left", text=" Account Statement", font=("Helvetica", 16, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=50, corner_radius=10, command=lambda: draw_mini_statement(acc_name, acc_balance, acc_no))
+    Mini_Stmt_Btn = ctk.CTkButton(Action_Frame, text="Account Statement", font=("Helvetica", 16, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=50, corner_radius=10, command=lambda: draw_mini_statement(acc_name, acc_balance, acc_no))
     Mini_Stmt_Btn.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
 
-    Txn_Search_Btn = ctk.CTkButton(Action_Frame, image=sch_icon, compound="left", text=" Search Transaction", font=("Helvetica", 16, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=50, corner_radius=10, command=lambda: draw_cus_transaction_details(acc_name, acc_balance, acc_no))
+    Txn_Search_Btn = ctk.CTkButton(Action_Frame, text="Search Transaction", font=("Helvetica", 16, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=50, corner_radius=10, command=lambda: draw_cus_transaction_details(acc_name, acc_balance, acc_no))
     Txn_Search_Btn.grid(row=1, column=1, padx=10, pady=10, sticky="ew")
 
 def draw_emp_login_screen():
     clear_window()
     main_window.title("Bank Management - Employee Login")
 
-    Header_Container = ctk.CTkFrame(main_window, fg_color="transparent")
-    Header_Container.pack(pady=(40, 30))
-    
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "employee_login_icon.png")
-        logo_data = Image.open(icon_path)
-        logo_img = ctk.CTkImage(light_image=logo_data, dark_image=logo_data, size=(40, 40))
-        Header_Logo = ctk.CTkLabel(Header_Container, image=logo_img, text="  Employee Login", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"], compound="left")
-        Header_Logo.pack()
-    except FileNotFoundError:
-        Header_Fallback = ctk.CTkLabel(Header_Container, text="Employee Login", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"])
-        Header_Fallback.pack()
+    Header = ctk.CTkLabel(main_window, text="Employee Login", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"])
+    Header.pack(pady=(50, 30))
 
     Card_Frame = ctk.CTkFrame(main_window, fg_color="white", corner_radius=15)
     Card_Frame.pack(ipadx=40, ipady=30)
@@ -621,51 +480,15 @@ def draw_emp_login_screen():
     Form_Frame = ctk.CTkFrame(Card_Frame, fg_color="transparent")
     Form_Frame.pack(pady=10)
 
-    def validation_emp_id(proposed_text):
-        if proposed_text == "" or proposed_text == "Enter Your 6-Digit ID":
-            return True
-        
-        if len(proposed_text) > 6:
-            return False
-        
-        for char in proposed_text:
-            if not char.isalnum():
-                return False
-        return True
-
-    vcmd = (main_window.register(validation_emp_id), '%P')
-
     Username_Label = ctk.CTkLabel(Form_Frame, text="Employee ID", font=("Helvetica", 16, "bold"), text_color=COLORS["text_main"])
     Username_Label.pack(anchor="w", pady=(0, 5))
-    Username_Input = ctk.CTkEntry(Form_Frame, placeholder_text="Enter Your 6-Digit ID", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"], validate="key", validatecommand=vcmd)
+    Username_Input = ctk.CTkEntry(Form_Frame, placeholder_text="Enter Your 6-Digit ID", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     Username_Input.pack(pady=(0, 20))
-
-    def force_caps(event):
-        val = Username_Input.get()
-
-        if any(c.islower() for c in val):
-            pos = Username_Input.index("insert")
-            Username_Input.delete(0, "end")
-            Username_Input.insert(0, val.upper())
-            Username_Input.icursor(pos)
-
-    Username_Input.bind("<KeyRelease>", force_caps)
 
     Password_Label = ctk.CTkLabel(Form_Frame, text="Password", font=("Helvetica", 16, "bold"), text_color=COLORS["text_main"])
     Password_Label.pack(anchor="w", pady=(0, 5))
     Password_Input = ctk.CTkEntry(Form_Frame, placeholder_text="Enter Your Password", show="*", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     Password_Input.pack(pady=(0, 30))
-
-    local_icons = {}
-    try:
-        l_icon_path = os.path.join(BASE_DIR, "assets", "emp_login_icon.png")
-        a_icon_path = os.path.join(BASE_DIR, "assets", "add_emp_icon.png")
-        b_icon_path = os.path.join(BASE_DIR, "assets", "back_icon.png")
-        local_icons['login'] = ctk.CTkImage(Image.open(l_icon_path), size=(22, 22))
-        local_icons['add_emp'] = ctk.CTkImage(Image.open(a_icon_path), size=(20, 20))
-        local_icons['back'] = ctk.CTkImage(Image.open(b_icon_path), size=(20, 20))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
 
     def attempt_emp_login():
         username = Username_Input.get()
@@ -678,26 +501,27 @@ def draw_emp_login_screen():
             cursor.execute("SELECT Emp_Psswd FROM Employee_Credentials WHERE Emp_ID = %s", (username,))
             result = cursor.fetchone()
 
-            if result is not None and result[0] == hash_password(password):
+            if result is not None and result[0] == password:
                 cursor.execute("SELECT Emp_Name FROM Employees WHERE Emp_ID = %s", (username,))
                 result = cursor.fetchone()
                 emp_name = result[0] if result else "[Employee-Name-Pending]"                
                 draw_employee_dashboard(username, emp_name)
+                print(f"Logged In Succesfully {username}")
             else:
                 messagebox.showerror("Login Failed", "Invalid Username Or Password !! \n\n Please Check Your Username And Password")
         except sql.Error as err:
-            messagebox.showerror("Error", f"{err}")
+            print(f"Databse Error: {err}")
 
-    Login_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('login'), compound="left", text=" Login", font=("Helvetica", 18, "bold"), fg_color=COLORS["success"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=attempt_emp_login)
+    Login_Btn = ctk.CTkButton(Form_Frame, text="Login", font=("Helvetica", 18, "bold"), fg_color=COLORS["success"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=attempt_emp_login)
     Login_Btn.pack(pady=(0, 15))
 
     Split_Btn_Frame = ctk.CTkFrame(Form_Frame, fg_color="transparent")
     Split_Btn_Frame.pack(fill="x")
 
-    Acc_Create_selector = ctk.CTkButton(Split_Btn_Frame, image=local_icons.get('add_emp'), compound="left", text=" Add Employee", font=("Helvetica", 15, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=155, corner_radius=8, command=draw_emp_create_screen)
+    Acc_Create_selector = ctk.CTkButton(Split_Btn_Frame, text="Add Employee", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=155, corner_radius=8, command=draw_emp_create_screen)
     Acc_Create_selector.pack(side="left")
 
-    Back_Homepage = ctk.CTkButton(Split_Btn_Frame, image=local_icons.get('back'), compound="left",text="Back To Home", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=155, corner_radius=8, command=draw_homepage)
+    Back_Homepage = ctk.CTkButton(Split_Btn_Frame, text="Back To Home", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=155, corner_radius=8, command=draw_homepage)
     Back_Homepage.pack(side="right")
 
 def draw_emp_create_screen():
@@ -728,15 +552,6 @@ def draw_emp_create_screen():
     Password_Input = ctk.CTkEntry(Form_Frame, placeholder_text="Create Password", show="*", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     Password_Input.pack(pady=(0, 25))
 
-    local_icons = {}
-    try:
-        c_icon_path = os.path.join(BASE_DIR, "assets", "create_icon.png")
-        b_icon_path = os.path.join(BASE_DIR, "assets", "back_arrow_icon.png")
-        local_icons['add_emp'] = ctk.CTkImage(Image.open(c_icon_path), size=(24, 24))
-        local_icons['back'] = ctk.CTkImage(Image.open(b_icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def attempt_emp_create():
         username = Emp_Name_Input.get()
         password = Password_Input.get()
@@ -746,33 +561,27 @@ def draw_emp_create_screen():
             messagebox.showerror("Invalid Input", "Please Fill All Required Fields Properly !")
             return
 
-        if len(username) > 50:
-            messagebox.showwarning("Limit Exceeded", "Employee Name cannot exceed 50 characters.")
-            return
-        if len(password) < 8:
-            messagebox.showwarning("Weak Password", "For security, your password must be at least 8 characters long.")
-            return
-
         if empr_code == "IAMEMPLOYER1234":    
             try:                
                 emp_id = gen_unique_emp_id(cursor)
-                secure_hash = hash_password(password)
                 cursor.execute("INSERT INTO Employees (Emp_ID, Emp_Name) VALUES (%s, %s)", (emp_id, username))
-                cursor.execute("INSERT INTO Employee_Credentials (Emp_ID, Emp_Psswd) VALUES (%s, %s)", (emp_id, secure_hash))
+                cursor.execute("INSERT INTO Employee_Credentials (Emp_ID, Emp_Psswd) VALUES (%s, %s)", (emp_id, password))
                 db.commit()
+                print(f"Employee Registered Successfully Employee ID: {emp_id}")
                 messagebox.showinfo("Employee Registered !", f"Employee Is Registered Successfully ! \n\n Employee ID Is: {emp_id}")
                 draw_emp_login_screen()
                 
             except sql.Error as err:
-                messagebox.showerror("Error", f"{err}")
+                print(f"Database Error: {err}")
         else:
             messagebox.showerror("Wrong Employer Code !!", "Please Input Correct Employer Code !!")
+            print("Please Input Correct Employer Code !!")
             return
 
-    Create_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('add_emp'), compound="left", text="Add Employee", font=("Helvetica", 16, "bold"), fg_color=COLORS["success"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=attempt_emp_create)
+    Create_Btn = ctk.CTkButton(Form_Frame, text="Add Employee", font=("Helvetica", 16, "bold"), fg_color=COLORS["success"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=attempt_emp_create)
     Create_Btn.pack(pady=(0, 15))
 
-    Back_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('back'), compound="left", text="Back To Login", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=draw_emp_login_screen)
+    Back_Btn = ctk.CTkButton(Form_Frame, text="Back To Login", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=draw_emp_login_screen)
     Back_Btn.pack()
 
 def draw_edit_screen(emp_id, emp_name):
@@ -793,22 +602,11 @@ def draw_edit_screen(emp_id, emp_name):
     acc_no_entry = ctk.CTkEntry(Form_Frame, placeholder_text="Enter Customer Account Number", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     acc_no_entry.pack(pady=(0, 30))
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "search_icon.png")
-        local_icons['search'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def fetch_account():
         acc_no = acc_no_entry.get().strip()
         
         if not acc_no:
             messagebox.showwarning("Input Error", "Please enter an account number.")
-            return
-
-        if len(acc_no) != 16 or not acc_no.isdigit():
-            messagebox.showwarning("Invalid Format", "Account Number must be exactly 16 digits long and contain only numbers.")
             return
 
         try:
@@ -821,12 +619,12 @@ def draw_edit_screen(emp_id, emp_name):
             else:
                 messagebox.showerror("Not Found", "Invalid Account Number. Please try again.")
         except sql.Error as err:
-            messagebox.showerror("Error", f"{err}")
+            print(f"Database Error: {err}")
 
-    Search_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('search'), compound="left", text=" Search Account", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=fetch_account)
+    Search_Btn = ctk.CTkButton(Form_Frame, text="Search Account", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=fetch_account)
     Search_Btn.pack(pady=(0, 15))
 
-    Back_Btn = ctk.CTkButton(Form_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
+    Back_Btn = ctk.CTkButton(Form_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
     Back_Btn.pack()
 
 def draw_update_fields(acc_no, emp_id, emp_name):
@@ -839,7 +637,7 @@ def draw_update_fields(acc_no, emp_id, emp_name):
         curr_name = data[0] if data else "Unknown"
         curr_usrnm = data[1] if data else "Unknown"
     except sql.Error as err:
-        messagebox.showerror("Error", f"{err}")
+        print(f"Database Error: {err}")
         curr_name, curr_usrnm = "Unknown", "Unknown"
 
     Header = ctk.CTkLabel(main_window, text="Update Customer Profile", font=("Helvetica", 36, "bold"), text_color=COLORS["primary"])
@@ -876,13 +674,6 @@ def draw_update_fields(acc_no, emp_id, emp_name):
     new_password_input = ctk.CTkEntry(Form_Frame, textvariable=pass_var, placeholder_text="Enter new password...", show="*", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     new_password_input.pack(pady=(0, 25))
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "edit_icon.png")
-        local_icons['edit'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def attempt_update():
         new_name = new_name_input.get().strip()
         new_username = new_usrnm_input.get().strip()
@@ -891,17 +682,6 @@ def draw_update_fields(acc_no, emp_id, emp_name):
         if not new_name and not new_username and not new_password:
             messagebox.showinfo("No Changes", "No changes were entered.")
             return
-
-        if new_name and len(new_name) > 50:
-            messagebox.showwarning("Limit Exceeded", "New Name cannot exceed 50 characters.")
-            return
-        if new_username and len(new_username) > 10:
-            messagebox.showwarning("Limit Exceeded", "New Username cannot exceed 10 characters.")
-            return
-        if new_password and len(new_password) < 8:
-            messagebox.showwarning("Weak Password", "For security, your password must be at least 8 characters long.")
-            return
-        
         try:
             if new_name:
                 cursor.execute("UPDATE Accounts SET Acc_Name = %s WHERE Acc_No = %s", (new_name, acc_no))
@@ -910,20 +690,19 @@ def draw_update_fields(acc_no, emp_id, emp_name):
                 cursor.execute("UPDATE Account_Credentials SET Usrnm = %s WHERE Acc_No = %s", (new_username, acc_no))
 
             if new_password:
-                secure_hash = hash_password(new_password)
-                cursor.execute("UPDATE Account_Credentials SET Psswd = %s WHERE Acc_No = %s", (secure_hash, acc_no))
+                cursor.execute("UPDATE Account_Credentials SET Psswd = %s WHERE Acc_No = %s", (new_password, acc_no))
 
             db.commit()
             messagebox.showinfo("Success", f"Customer profile for Account {acc_no} updated successfully!")
             draw_edit_screen(emp_id, emp_name)
 
         except sql.Error as err:
-            messagebox.showerror("Error", f"{err}")
+            print(f"Database Error: {err}")
 
-    Update_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('edit'), compound="left", text=" Save Details", font=("Helvetica", 18, "bold"), fg_color=COLORS["success"], hover_color="#218838", height=45, width=320, corner_radius=8, command=attempt_update)
+    Update_Btn = ctk.CTkButton(Form_Frame, text="Save Details", font=("Helvetica", 18, "bold"), fg_color=COLORS["success"], hover_color="#218838", height=45, width=320, corner_radius=8, command=attempt_update)
     Update_Btn.pack(pady=(0, 15))
 
-    Cancel_Btn = ctk.CTkButton(Form_Frame, text="← Cancel Changes", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_edit_screen(emp_id, emp_name))
+    Cancel_Btn = ctk.CTkButton(Form_Frame, text="Cancel Changes", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_edit_screen(emp_id, emp_name))
     Cancel_Btn.pack()
 
     Preview_Frame = ctk.CTkFrame(Card_Frame, fg_color=COLORS["secondary"], corner_radius=15)
@@ -999,13 +778,6 @@ def draw_transfer_screen(emp_id, emp_name):
     transfer_amt_entry = ctk.CTkEntry(Form_Frame, textvariable=amt_var, placeholder_text="Amount (₹)", font=("Helvetica", 16), height=45, corner_radius=8, border_color=COLORS["border"])
     transfer_amt_entry.pack(fill="x", pady=(0, 30))
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "transfer_icon.png")
-        local_icons['transfer'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def attempt_transfer():
         sender_acc = sender_entry.get().strip()
         reciever_acc = receiver_entry.get().strip()
@@ -1013,13 +785,6 @@ def draw_transfer_screen(emp_id, emp_name):
 
         if not sender_acc or not reciever_acc or not amt_str:
             messagebox.showwarning("Invalid Input", "Please Fill All Required Fields")
-            return
-
-        if len(sender_acc) != 16 or not sender_acc.isdigit():
-            messagebox.showwarning("Invalid Format", "Sender Account Number must be exactly 16 digits.")
-            return
-        if len(reciever_acc) != 16 or not reciever_acc.isdigit():
-            messagebox.showwarning("Invalid Format", "Receiver Account Number must be exactly 16 digits.")
             return
 
         if sender_acc == reciever_acc:
@@ -1072,10 +837,10 @@ def draw_transfer_screen(emp_id, emp_name):
             db.rollback()
             messagebox.showerror("Database Error", f"Transfer failed: {err}")
 
-    trnsf_btn = ctk.CTkButton(Form_Frame, image=local_icons.get('transfer'), compound="left", text=" Complete Transfer", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, corner_radius=8, command=attempt_transfer)
+    trnsf_btn = ctk.CTkButton(Form_Frame, text="Complete Transfer", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, corner_radius=8, command=attempt_transfer)
     trnsf_btn.pack(fill="x", pady=(0, 15))
 
-    back_btn = ctk.CTkButton(Form_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
+    back_btn = ctk.CTkButton(Form_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
     back_btn.pack(fill="x")
 
     Vis_Frame = ctk.CTkFrame(Card_Frame, fg_color=COLORS["secondary"], corner_radius=15)
@@ -1253,21 +1018,10 @@ def draw_statement_screen(emp_id, emp_name):
     acc_no_entry = ctk.CTkEntry(Form_Frame, placeholder_text="Customer Account Number", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     acc_no_entry.pack(pady=(0, 30))
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "statement_icon.png")
-        local_icons['statement'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def fetch_statement():
         acc_no = acc_no_entry.get().strip()
         if not acc_no:
             messagebox.showwarning("Input Error", "Please enter an account number.")
-            return
-
-        if len(acc_no) != 16 or not acc_no.isdigit():
-            messagebox.showwarning("Invalid Format", "Account Number must be exactly 16 digits long and contain only numbers.")
             return
 
         try:
@@ -1324,18 +1078,18 @@ def draw_statement_screen(emp_id, emp_name):
                         txt.insert("end", f"{amt_str:>15}", "credit")
 
             txt.insert("end", "\n\n" +"-"*22 + "* End Of Transactions *" + "-"*24 + "\n")
-            txt.configure(state="disabled")
+            txt.configure(state="disabled") # Make text read-only
 
-            Back_Btn_Output = ctk.CTkButton(main_window, text="← Back To Dashboard", font=("Helvetica", 18, "bold"), fg_color=COLORS["secondary"], border_width=2, border_color=COLORS["border"], text_color=COLORS["text_main"], hover_color=COLORS["secondary_hover"], height=50, width=250, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
+            Back_Btn_Output = ctk.CTkButton(main_window, text="Back To Dashboard", font=("Helvetica", 18, "bold"), fg_color=COLORS["secondary"], text_color=COLORS["text_main"], hover_color=COLORS["secondary_hover"], height=50, width=250, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
             Back_Btn_Output.pack(pady=(0, 15))
 
         except sql.Error as err:
             messagebox.showerror("Database Error", f"Failed to fetch statement: {err}")
 
-    Search_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('statement'), compound="left", text=" Get Statement", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=fetch_statement)
+    Search_Btn = ctk.CTkButton(Form_Frame, text="Get Statement", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=fetch_statement)
     Search_Btn.pack(pady=(0, 15))
 
-    Back_Btn = ctk.CTkButton(Form_Frame, text="← Back to Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
+    Back_Btn = ctk.CTkButton(Form_Frame, text="Back to Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
     Back_Btn.pack()
 
 def draw_close_screen(emp_id, emp_name):
@@ -1356,22 +1110,11 @@ def draw_close_screen(emp_id, emp_name):
     acc_no_entry = ctk.CTkEntry(Form_Frame, placeholder_text="Account Number To Close", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     acc_no_entry.pack(pady=(0, 30))
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "close_icon.png")
-        local_icons['close'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def attempt_close():
         acc_no = acc_no_entry.get().strip()
         
         if not acc_no:
             messagebox.showwarning("Input Error", "Please enter an account number.")
-            return
-
-        if len(acc_no) != 16 or not acc_no.isdigit():
-            messagebox.showwarning("Invalid Format", "Account Number must be exactly 16 digits long and contain only numbers.")
             return
 
         try:
@@ -1383,7 +1126,7 @@ def draw_close_screen(emp_id, emp_name):
                 if confirm:
                     cursor.execute("DELETE FROM Accounts WHERE Acc_No = %s", (acc_no,))
                     cursor.execute("DELETE FROM Account_Credentials WHERE Acc_No = %s", (acc_no,))
-                    cursor.execute("DELETE FROM Transactions WHERE Sender = %s AND Reciever = %s", (acc_no, "SELF_WITHDRAW"))
+                    cursor.execute("DELETE FROM Transactions WHERE Sender = %s AND Reciever = %s", (acc_no, "SELF_WITHDRAW"))  # Assuming you want to delete self-withdrawal transactions as well
                     cursor.execute("DELETE FROM Transactions WHERE Sender = %s AND Reciever = %s", ("SELF_DEPOSIT", acc_no))
                     db.commit()
                     messagebox.showinfo("Account Closed", f"Account {acc_no} has been closed successfully.")
@@ -1391,12 +1134,12 @@ def draw_close_screen(emp_id, emp_name):
             else:
                 messagebox.showerror("Not Found", "Invalid Account Number. Please try again.")
         except sql.Error as err:
-            messagebox.showerror("Error", f"{err}")
+            print(f"Database Error: {err}")
 
-    Close_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('close'), compound="left", text=" Close Account", font=("Helvetica", 18, "bold"), fg_color=COLORS["danger"], hover_color="#C82333", height=45, width=320, corner_radius=8, command=attempt_close)
+    Close_Btn = ctk.CTkButton(Form_Frame, text="Close Account", font=("Helvetica", 18, "bold"), fg_color=COLORS["danger"], hover_color="#C82333", height=45, width=320, corner_radius=8, command=attempt_close)
     Close_Btn.pack(pady=(0, 15))
 
-    Back_btn = ctk.CTkButton(Form_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
+    Back_btn = ctk.CTkButton(Form_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
     Back_btn.pack()
 
 def draw_transaction_details_screen(emp_id, emp_name, trnsc_id, sender, sender_name, receiver, receiver_name, amount, timestamp_str):
@@ -1443,17 +1186,10 @@ def draw_transaction_details_screen(emp_id, emp_name, trnsc_id, sender, sender_n
     Action_Frame = ctk.CTkFrame(main_window, fg_color="transparent")
     Action_Frame.pack(pady=25)
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "search_icon.png")
-        local_icons['search'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
-    Search_Again_Btn = ctk.CTkButton(Action_Frame, image=local_icons.get('search'), compound="left", text=" Search Another", font=("Helvetica", 16, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=220, corner_radius=8, command=lambda: draw_transaction_details(emp_id, emp_name))
+    Search_Again_Btn = ctk.CTkButton(Action_Frame, text="Search Another", font=("Helvetica", 16, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=220, corner_radius=8, command=lambda: draw_transaction_details(emp_id, emp_name))
     Search_Again_Btn.grid(row=0, column=0, padx=15)
 
-    Back_Btn = ctk.CTkButton(Action_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color=COLORS["dark_btn"], text_color="white", hover_color=COLORS["dark_hover"], height=45, width=220, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
+    Back_Btn = ctk.CTkButton(Action_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color=COLORS["dark_btn"], border_width=2, border_color=COLORS["border"], hover_color=COLORS["dark_hover"], height=45, width=220, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
     Back_Btn.grid(row=0, column=1, padx=15)
 
 def draw_transaction_details(emp_id, emp_name):
@@ -1474,22 +1210,11 @@ def draw_transaction_details(emp_id, emp_name):
     trnsc_id_entry = ctk.CTkEntry(Form_Frame, placeholder_text="e.g., aB3x20260814...", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     trnsc_id_entry.pack(pady=(0, 30))
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "search_icon.png")
-        local_icons['search'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def fetch_transaction():
         trnsc_id = trnsc_id_entry.get().strip()
 
         if not trnsc_id:
             messagebox.showwarning("Input Error", "Please Enter A Valid Transaction ID.")
-            return
-
-        if len(trnsc_id) != 30:
-            messagebox.showwarning("Invalid Format", "Transaction IDs are exactly 30 characters long. Please check your input.")
             return
 
         try:
@@ -1524,10 +1249,10 @@ def draw_transaction_details(emp_id, emp_name):
         except sql.Error as err:
             messagebox.showerror("Database Error", f"Failed to fetch transaction details: {err}")
 
-    Search_Btn = ctk.CTkButton(Form_Frame, image=local_icons.get('search'), compound="left", text=" Lookup Details", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=fetch_transaction)
+    Search_Btn = ctk.CTkButton(Form_Frame, text="Lookup Details", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=fetch_transaction)
     Search_Btn.pack(pady=(0, 15))
 
-    Back_btn = ctk.CTkButton(Form_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
+    Back_btn = ctk.CTkButton(Form_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_employee_dashboard(emp_id, emp_name))
     Back_btn.pack()
 
 def draw_cus_transaction_details(acc_name, acc_balance, acc_no):
@@ -1546,22 +1271,11 @@ def draw_cus_transaction_details(acc_name, acc_balance, acc_no):
     trnsc_id_entry = ctk.CTkEntry(Card_Frame, placeholder_text="e.g., aB3x20260814...", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
     trnsc_id_entry.pack(pady=(0, 30))
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "search_icon.png")
-        local_icons['search'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
     def fetch_transaction():
         trnsc_id = trnsc_id_entry.get().strip()
 
         if not trnsc_id:
             messagebox.showwarning("Input Error", "Please Enter A Valid Transaction ID.")
-            return
-
-        if len(trnsc_id) != 30:
-            messagebox.showwarning("Invalid Format", "Transaction IDs are exactly 30 characters long. Please check your input.")
             return
 
         try:
@@ -1601,10 +1315,10 @@ def draw_cus_transaction_details(acc_name, acc_balance, acc_no):
         except sql.Error as err:
             messagebox.showerror("Database Error", f"Failed to fetch transaction details: {err}")
 
-    Search_Btn = ctk.CTkButton(Card_Frame, image=local_icons.get('search'), compound="left", text=" Lookup Details", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=fetch_transaction)
+    Search_Btn = ctk.CTkButton(Card_Frame, text="Lookup Details", font=("Helvetica", 18, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=320, corner_radius=8, command=fetch_transaction)
     Search_Btn.pack(pady=(0, 15))
 
-    Back_btn = ctk.CTkButton(Card_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_dashboard(acc_name, acc_balance, acc_no))
+    Back_btn = ctk.CTkButton(Card_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color="transparent", border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=45, width=320, corner_radius=8, command=lambda: draw_dashboard(acc_name, acc_balance, acc_no))
     Back_btn.pack()
 
 def draw_cus_transaction_details_screen(acc_name, acc_balance, acc_no, trnsc_id, sender, sender_name, receiver, receiver_name, amount, timestamp_str):
@@ -1654,104 +1368,11 @@ def draw_cus_transaction_details_screen(acc_name, acc_balance, acc_no, trnsc_id,
     Action_Frame = ctk.CTkFrame(main_window, fg_color="transparent")
     Action_Frame.pack(pady=25)
 
-    local_icons = {}
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "search_icon.png")
-        local_icons['search'] = ctk.CTkImage(Image.open(icon_path), size=(24, 24))
-    except Exception as err:
-        messagebox.showerror("Error", f"{err}")
-
-    Search_Again_Btn = ctk.CTkButton(Action_Frame, image=local_icons.get('search'), compound="left", text=" Search Another", font=("Helvetica", 16, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=220, corner_radius=8, command=lambda: draw_cus_transaction_details(acc_name, acc_balance, acc_no))
+    Search_Again_Btn = ctk.CTkButton(Action_Frame, text="Search Another", font=("Helvetica", 16, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, width=200, corner_radius=8, command=lambda: draw_cus_transaction_details(acc_name, acc_balance, acc_no))
     Search_Again_Btn.grid(row=0, column=0, padx=15)
 
-    Back_Btn = ctk.CTkButton(Action_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color=COLORS["dark_btn"], text_color="white", hover_color=COLORS["dark_hover"], height=45, width=220, corner_radius=8, command=lambda: draw_dashboard(acc_name, acc_balance, acc_no))
+    Back_Btn = ctk.CTkButton(Action_Frame, text="Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color=COLORS["dark_btn"], hover_color=COLORS["dark_hover"], height=45, width=200, corner_radius=8, command=lambda: draw_dashboard(acc_name, acc_balance, acc_no))
     Back_Btn.grid(row=0, column=1, padx=15)
-
-def draw_account_details_screen(Emp_ID, Emp_Name):
-    clear_window()
-    main_window.title("Bank Management - Account Details")
-
-    Header_Card = ctk.CTkFrame(main_window, fg_color="white", corner_radius=15)
-    Header_Card.pack(pady=(30, 10), padx=60, fill="x")
-
-    Header_Container = ctk.CTkFrame(Header_Card, fg_color="transparent")
-    Header_Container.pack(pady=(15, 5))
-
-    try:
-        icon_path = os.path.join(BASE_DIR, "assets", "details_icon.png")
-        logo_data = Image.open(icon_path)
-        logo_img = ctk.CTkImage(light_image=logo_data, dark_image=logo_data, size=(32, 32))
-        Header_Logo = ctk.CTkLabel(Header_Container, image=logo_img, text="  Customer Account Details", font=("Helvetica", 28, "bold"), text_color=COLORS["primary"], compound="left")
-        Header_Logo.pack()
-    except Exception:
-        Header_Fallback = ctk.CTkLabel(Header_Container, text="Customer Account Details", font=("Helvetica", 28, "bold"), text_color=COLORS["primary"])
-        Header_Fallback.pack()
-
-    Sub_Header = ctk.CTkLabel(Header_Card, text="Search for a customer account to view complete information.", font=("Helvetica", 14), text_color=COLORS["text_muted"])
-    Sub_Header.pack(pady=(0, 15))
-
-    Divider = ctk.CTkFrame(Header_Card, height=2, width=350, fg_color=COLORS["secondary_hover"])
-    Divider.pack(pady=(0, 15))
-
-    Card_Frame = ctk.CTkFrame(main_window, fg_color="white", corner_radius=15)
-    Card_Frame.pack(pady=10, padx=60, expand=True, fill="both")
-
-    Search_Frame = ctk.CTkFrame(Card_Frame, fg_color="transparent")
-    Search_Frame.pack(pady=20)
-
-    Search_Input = ctk.CTkEntry(Search_Frame, placeholder_text="Enter 16-Digit Account Number", font=("Helvetica", 16), width=320, height=45, corner_radius=8, border_color=COLORS["border"])
-    Search_Input.grid(row=0, column=0, padx=10)
-
-    Details_Frame = ctk.CTkFrame(Card_Frame, fg_color=COLORS["secondary"], corner_radius=10)
-
-    def fetch_details():
-        acc_no = Search_Input.get().strip()
-        
-        if not acc_no:
-            messagebox.showwarning("Input Error", "Please enter an Account Number.")
-            return
-
-        if len(acc_no) != 16 or not acc_no.isdigit():
-            messagebox.showwarning("Invalid Format", "Account Number must be exactly 16 digits long and contain only numbers.")
-            return
-
-        try:
-            cursor.execute("SELECT A.Acc_No, A.Acc_Name, A.Acc_Balance, A.Acc_opn_date, C.Usrnm FROM Accounts A JOIN Account_Credentials C ON A.Acc_No = C.Acc_No WHERE A.Acc_No = %s", (acc_no,))
-            result = cursor.fetchone()
-
-            if result:
-                Search_Frame.pack_forget()
-
-                for widget in Details_Frame.winfo_children():
-                    widget.destroy()
-
-                Details_Frame.pack(pady=20, padx=40, fill="x", ipadx=20, ipady=20)
-                formatted_date = result[3].strftime("%B %d, %Y - %I:%M %p")
-
-                Back_Btn.pack_forget()
-                Back_Btn.pack(pady=(20, 30))
-
-                labels = [("Account Number:", result[0]), ("Full Name:", result[1]), ("Username:", result[4]), ("Current Balance:", f"₹ {result[2]:,.2f}"), ("Account Created:", formatted_date)]
-
-                for i, (label_text, val_text) in enumerate(labels):
-                    lbl = ctk.CTkLabel(Details_Frame, text=label_text, font=("Helvetica", 15, "bold"), text_color=COLORS["text_muted"])
-                    lbl.grid(row=i, column=0, sticky="w", pady=8, padx=20)
-                    
-                    val = ctk.CTkLabel(Details_Frame, text=str(val_text), font=("Helvetica", 16, "bold"), text_color=COLORS["text_main"])
-                    val.grid(row=i, column=1, sticky="w", pady=8, padx=20)
-
-            else:
-                Details_Frame.pack_forget()
-                messagebox.showerror("Not Found", "No account found with that Account Number.")
-
-        except Exception as err:
-            messagebox.showerror("Error", err)
-
-    Search_Btn = ctk.CTkButton(Search_Frame, text="Search", font=("Helvetica", 16, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], height=45, command=fetch_details)
-    Search_Btn.grid(row=0, column=1, padx=10)
-
-    Back_Btn = ctk.CTkButton(Card_Frame, text="← Back To Dashboard", font=("Helvetica", 16, "bold"), fg_color=COLORS["dark_btn"], text_color="white", hover_color=COLORS["dark_hover"], height=45, width=220, corner_radius=8, command=lambda: draw_employee_dashboard(Emp_ID, Emp_Name))
-    Back_Btn.pack(pady=(20, 30))
 
 def draw_employee_dashboard(Emp_ID, Emp_Name):
     clear_window()
@@ -1763,61 +1384,29 @@ def draw_employee_dashboard(Emp_ID, Emp_Name):
     SubHeader = ctk.CTkLabel(main_window, text=f"Logged in: {Emp_Name}", font=("Helvetica", 20), text_color=COLORS["text_muted"])
     SubHeader.pack(pady=(0, 10))
 
-    try:
-        out_icon_path = os.path.join(BASE_DIR, "assets", "logout_icon_light.png")
-        logout_img_data = Image.open(out_icon_path)
-        logout_icon = ctk.CTkImage(light_image=logout_img_data, dark_image=logout_img_data, size=(20, 20))
-        Logout_Btn = ctk.CTkButton(main_window, image=logout_icon, compound="left", text=" Log Out", font=("Helvetica", 16, "bold"), fg_color=COLORS["danger"], hover_color="#C82333", height=45, width=200, corner_radius=8, command=draw_homepage)
-    except FileNotFoundError:
-        Logout_Btn = ctk.CTkButton(main_window, text="Log Out", font=("Helvetica", 16, "bold"), fg_color=COLORS["danger"], hover_color="#C82333", height=45, width=200, corner_radius=8, command=draw_homepage)
-
-    Logout_Btn.pack(side="bottom", pady=(0, 20))
-
     Card_Frame = ctk.CTkFrame(main_window, fg_color="white", corner_radius=15)
-    Card_Frame.pack(padx=50, pady=(10, 15), fill="both", expand=True)
+    Card_Frame.pack(padx=80, pady=10, fill="x")
 
     Action_Title = ctk.CTkLabel(Card_Frame, text="Administrative Actions", font=("Helvetica", 22, "bold"), text_color=COLORS["text_main"])
-    Action_Title.pack(anchor="center", pady=(15, 5))
+    Action_Title.pack(anchor="w", pady=(15, 10), padx=30)
 
-    local_icons = {}
-    icon_size = (35, 35)
+    def create_action_row(parent, text, button_text, command, custom_pady=(3, 3)):
+        row = ctk.CTkFrame(parent, fg_color="transparent", border_width=2, border_color=COLORS["border"], corner_radius=10)
+        row.pack(fill="x", pady=custom_pady, padx=30)
+        lbl = ctk.CTkLabel(row, text=text, font=("Helvetica", 16, "bold"), text_color=COLORS["text_main"])
+        lbl.pack(side="left", padx=20, pady=7)
+        btn = ctk.CTkButton(row, text=button_text, font=("Helvetica", 15, "bold"), fg_color=COLORS["primary"], hover_color=COLORS["primary_hover"], width=140, height=35, corner_radius=8, command=command)
+        btn.pack(side="right", padx=20, pady=7)
 
-    try:
-        c_icon_path = os.path.join(BASE_DIR, "assets", "create_icon.png")
-        e_icon_path = os.path.join(BASE_DIR, "assets", "edit_icon.png")
-        v_icon_path = os.path.join(BASE_DIR, "assets", "details_icon.png")
-        t_icon_path = os.path.join(BASE_DIR, "assets", "transfer_icon.png")
-        s_icon_path = os.path.join(BASE_DIR, "assets", "statement_icon.png")
-        se_icon_path = os.path.join(BASE_DIR, "assets", "search_icon.png")
-        cl_icon_path = os.path.join(BASE_DIR, "assets", "close_icon.png")
-        local_icons['create'] = ctk.CTkImage(Image.open(c_icon_path), size=icon_size)
-        local_icons['edit'] = ctk.CTkImage(Image.open(e_icon_path), size=icon_size)
-        local_icons['details'] = ctk.CTkImage(Image.open(v_icon_path), size=icon_size)
-        local_icons['transfer'] = ctk.CTkImage(Image.open(t_icon_path), size=icon_size)
-        local_icons['statement'] = ctk.CTkImage(Image.open(s_icon_path), size=icon_size)
-        local_icons['search'] = ctk.CTkImage(Image.open(se_icon_path), size=icon_size)
-        local_icons['close'] = ctk.CTkImage(Image.open(cl_icon_path), size=icon_size)
-    except Exception as err:
-        messagebox.showerror("Error", f"Icon Load Error: {err}")
+    create_action_row(Card_Frame, "Create New Customer Account", "Create", lambda: draw_create_screen(Emp_ID, Emp_Name))
+    create_action_row(Card_Frame, "Edit Existing Customer Details", "Edit", lambda: draw_edit_screen(Emp_ID, Emp_Name))
+    create_action_row(Card_Frame, "Transfer Money Between Accounts", "Transfer", lambda: draw_transfer_screen(Emp_ID, Emp_Name))
+    create_action_row(Card_Frame, "Generate Account Statement", "Get Statement", lambda: draw_statement_screen(Emp_ID, Emp_Name))
+    create_action_row(Card_Frame, "Close Customer Account", "Close", lambda: draw_close_screen(Emp_ID, Emp_Name))
+    create_action_row(Card_Frame, "Get Transaction Details", "Get Details", lambda: draw_transaction_details(Emp_ID, Emp_Name), custom_pady=(3, 20))
 
-    Grid_Frame = ctk.CTkFrame(Card_Frame, fg_color="transparent")
-    Grid_Frame.pack(pady=5)
-    Grid_Frame.grid_columnconfigure((0, 1, 2), weight=1)
-
-    def create_tile(parent, text, icon_key, command, row, col, btn_color=COLORS["primary"]):
-        hover_color = COLORS["primary_hover"] if btn_color == COLORS["primary"] else "#C82333"
-        btn = ctk.CTkButton(parent, image=local_icons.get(icon_key), compound="top", text=text, font=("Helvetica", 16, "bold"), fg_color=btn_color, hover_color=hover_color, width=145, height=100, corner_radius=12, command=command)
-        btn.grid(row=row, column=col, padx=10, pady=8)
-
-    create_tile(Grid_Frame, "Create\nAccount", 'create', lambda: draw_create_screen(Emp_ID, Emp_Name), 0, 0)
-    create_tile(Grid_Frame, "Edit\nDetails", 'edit', lambda: draw_edit_screen(Emp_ID, Emp_Name), 0, 1)
-    create_tile(Grid_Frame, "View\nDetails", 'details', lambda: draw_account_details_screen(Emp_ID, Emp_Name), 0, 2)
-
-    create_tile(Grid_Frame, "Transfer\nMoney", 'transfer', lambda: draw_transfer_screen(Emp_ID, Emp_Name), 1, 0)
-    create_tile(Grid_Frame, "Account\nStatement", 'statement', lambda: draw_statement_screen(Emp_ID, Emp_Name), 1, 1)
-    create_tile(Grid_Frame, "Transaction\nDetails", 'search', lambda: draw_transaction_details(Emp_ID, Emp_Name), 1, 2)
-
-    create_tile(Grid_Frame, "Close\nAccount", 'close', lambda: draw_close_screen(Emp_ID, Emp_Name), 2, 0, btn_color=COLORS["danger"])
+    Logout_Btn = ctk.CTkButton(main_window, text="Log Out", font=("Helvetica", 16, "bold"), fg_color=COLORS["danger"], hover_color="#C82333", height=45, width=200, corner_radius=8, command=draw_homepage)
+    Logout_Btn.pack(pady=10)
 
 def draw_mini_statement(acc_name, acc_balance, acc_no):
     clear_window()
@@ -1841,6 +1430,7 @@ def draw_mini_statement(acc_name, acc_balance, acc_no):
             draw_homepage()
             return
 
+        # Fetch last 10 transactions where the user is either the sender or the receiver
         cursor.execute("SELECT Trnsc_ID, Sender, Reciever, Trns_Amt, Trns_Time FROM Transactions WHERE Sender = %s OR Reciever = %s ORDER BY Trns_Time DESC LIMIT 10", (acc_no, acc_no))
         transactions = cursor.fetchall()
 
@@ -1873,9 +1463,9 @@ def draw_mini_statement(acc_name, acc_balance, acc_no):
                     txt.insert("end", f"{amt_str:>15}", "credit")
 
         txt.insert("end", "\n\n" +"-"*17 + "* Contact Bank For Older Records *" + "-"*18 + "\n")
-        txt.configure(state="disabled")
+        txt.configure(state="disabled") # Make text read-only
 
-        Back_Btn = ctk.CTkButton(main_window, text="← Back To Dashboard", font=("Helvetica", 18, "bold"), fg_color=COLORS["secondary"], border_width=2, border_color=COLORS["border"], text_color=COLORS["text_muted"], hover_color=COLORS["secondary_hover"], height=50, width=250, corner_radius=8, command=lambda: draw_dashboard(acc_name, acc_balance, acc_no))
+        Back_Btn = ctk.CTkButton(main_window, text="Back To Dashboard", font=("Helvetica", 18, "bold"), fg_color=COLORS["secondary"], text_color=COLORS["text_main"], hover_color=COLORS["secondary_hover"], height=50, width=250, corner_radius=8, command=lambda: draw_dashboard(acc_name, acc_balance, acc_no))
         Back_Btn.pack(pady=(0, 15))
 
     except sql.Error as err:
@@ -1888,25 +1478,6 @@ main_window.resizable(False,False)
 main_window.geometry("800x600+550+200") #To set the window size to 800 by 600 pixels and to pop it in the middle of the screen
 main_window.configure(fg_color=COLORS["bg"]) #Setting the background colour
 
-try:
-    png_path = os.path.join(BASE_DIR, "assets", "bank_logo.png")
-    logo = Image.open(png_path)
-    ico_path = os.path.join(BASE_DIR, "assets", "bank_logo.ico")
-    logo.save(ico_path, format="ICO", size=[(64, 64)])
-    main_window.after(200, lambda: main_window.iconbitmap(ico_path))
-except Exception as err:
-    messagebox.showerror("Error", f"{err}")
-
 draw_homepage()
-#================================================
-#    Merging main.py & databse.py scripts
-#================================================
-try:
-    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
-except Exception:
-    pass
-#================================================
-#
-#================================================
 
 main_window.mainloop() #Running the main program to genrate the window
